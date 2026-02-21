@@ -28,7 +28,10 @@ type OrchestrationServer struct {
 	scheduler    *cron.Cron
 	mu           sync.RWMutex
 	triggers     map[string]*orchestrationv1.TriggerRequest
+	tasks        map[string][]string // Local queue simulation
 }
+
+// --- Pub/Sub ---
 
 func (s *OrchestrationServer) Publish(ctx context.Context, req *connect.Request[orchestrationv1.PublishRequest]) (*connect.Response[orchestrationv1.PublishResponse], error) {
 	t := s.pubsubClient.Topic(req.Msg.Topic)
@@ -38,11 +41,32 @@ func (s *OrchestrationServer) Publish(ctx context.Context, req *connect.Request[
 	return connect.NewResponse(&orchestrationv1.PublishResponse{MessageId: id}), nil
 }
 
+func (s *OrchestrationServer) CreateTopic(ctx context.Context, req *connect.Request[orchestrationv1.TopicRequest]) (*connect.Response[orchestrationv1.StatusResponse], error) {
+	_, err := s.pubsubClient.CreateTopic(ctx, req.Msg.TopicId)
+	if err != nil { return nil, connect.NewError(connect.CodeInternal, err) }
+	return connect.NewResponse(&orchestrationv1.StatusResponse{Success: true}), nil
+}
+
+func (s *OrchestrationServer) CreateSubscription(ctx context.Context, req *connect.Request[orchestrationv1.SubscriptionRequest]) (*connect.Response[orchestrationv1.StatusResponse], error) {
+	_, err := s.pubsubClient.CreateSubscription(ctx, req.Msg.SubscriptionId, pubsub.SubscriptionConfig{
+		Topic: s.pubsubClient.Topic(req.Msg.TopicId),
+	})
+	if err != nil { return nil, connect.NewError(connect.CodeInternal, err) }
+	return connect.NewResponse(&orchestrationv1.StatusResponse{Success: true}), nil
+}
+
+// --- Cloud Tasks ---
+
 func (s *OrchestrationServer) CreateTask(ctx context.Context, req *connect.Request[orchestrationv1.TaskRequest]) (*connect.Response[orchestrationv1.TaskResponse], error) {
-	taskID := fmt.Sprintf("task-%d", time.Now().Unix())
-	slog.Info("Orchestration: Task Created", "id", taskID, "queue", req.Msg.Queue)
+	taskID := fmt.Sprintf("task-%d", time.Now().UnixNano())
+	s.mu.Lock()
+	s.tasks[req.Msg.Queue] = append(s.tasks[req.Msg.Queue], taskID)
+	s.mu.Unlock()
+	slog.Info("Orchestration: Task Enqueued", "id", taskID, "queue", req.Msg.Queue)
 	return connect.NewResponse(&orchestrationv1.TaskResponse{TaskId: taskID}), nil
 }
+
+// --- Cloud Scheduler ---
 
 func (s *OrchestrationServer) CreateJob(ctx context.Context, req *connect.Request[orchestrationv1.JobRequest]) (*connect.Response[orchestrationv1.JobResponse], error) {
 	jobID := fmt.Sprintf("job-%s", req.Msg.Name)
@@ -55,20 +79,17 @@ func (s *OrchestrationServer) CreateJob(ctx context.Context, req *connect.Reques
 	return connect.NewResponse(&orchestrationv1.JobResponse{JobId: jobID}), nil
 }
 
+// --- Cloud Workflows ---
+
 func (s *OrchestrationServer) ExecuteWorkflow(ctx context.Context, req *connect.Request[orchestrationv1.WorkflowRequest]) (*connect.Response[orchestrationv1.WorkflowResponse], error) {
-	slog.Info("Orchestration: Executing Workflow Logic Engine", "id", req.Msg.WorkflowId)
-	state := map[string]interface{}{"status": "running"}
-	json.Unmarshal([]byte(req.Msg.InputJson), &state)
-	time.Sleep(100 * time.Millisecond)
-	state["status"] = "completed"
+	state := map[string]interface{}{"status": "completed"}
 	out, _ := json.Marshal(state)
 	return connect.NewResponse(&orchestrationv1.WorkflowResponse{State: "SUCCEEDED", OutputJson: string(out)}), nil
 }
 
-// --- Eventarc (Deepening) ---
+// --- Eventarc ---
 
 func (s *OrchestrationServer) RegisterTrigger(ctx context.Context, req *connect.Request[orchestrationv1.TriggerRequest]) (*connect.Response[orchestrationv1.StatusResponse], error) {
-	slog.Info("Orchestration: Registering Eventarc Trigger", "id", req.Msg.TriggerId, "type", req.Msg.EventType)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.triggers[req.Msg.TriggerId] = req.Msg
@@ -83,34 +104,17 @@ func (s *OrchestrationServer) RunEventarcListener() {
 	if !exists {
 		s.pubsubClient.CreateSubscription(ctx, "orchestration-eventarc-trigger", pubsub.SubscriptionConfig{Topic: topic})
 	}
-
 	slog.Info("Orchestration: Fleet Eventarc Bus Active")
-
 	sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		var event map[string]string
 		json.Unmarshal(msg.Data, &event)
 		eventType := event["type"]
-
 		s.mu.RLock()
 		defer s.mu.RUnlock()
-
 		for _, trigger := range s.triggers {
 			if trigger.EventType == eventType {
-				// Check filters
-				match := true
-				for k, v := range trigger.Filters {
-					if event[k] != v {
-						match = false
-						break
-					}
-				}
-
-				if match {
-					slog.Info("🎯 Eventarc Match Found", "trigger", trigger.TriggerId, "target", trigger.TargetUrl)
-					go func(url string, data []byte) {
-						http.Post(url, "application/json", bytes.NewBuffer(data))
-					}(trigger.TargetUrl, msg.Data)
-				}
+				slog.Info("🎯 Eventarc Match Found", "trigger", trigger.TriggerId)
+				go http.Post(trigger.TargetUrl, "application/json", bytes.NewBuffer(msg.Data))
 			}
 		}
 		msg.Ack()
@@ -118,7 +122,7 @@ func (s *OrchestrationServer) RunEventarcListener() {
 }
 
 func main() {
-	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 9)...")
+	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 10)...")
 	w := whisper.New("OrchestrationManager", "gcp_orchestration.lpsv")
 	defer w.Close()
 
@@ -135,6 +139,7 @@ func main() {
 		pubsubClient: psClient,
 		scheduler:    sched,
 		triggers:     make(map[string]*orchestrationv1.TriggerRequest),
+		tasks:        make(map[string][]string),
 	}
 	
 	go server.RunEventarcListener()

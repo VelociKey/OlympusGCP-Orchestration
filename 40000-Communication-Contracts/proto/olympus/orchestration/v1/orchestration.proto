@@ -7,6 +7,8 @@ option go_package = "OlympusGCP-Orchestration/40000-Communication-Contracts/430-
 service OrchestrationService {
   // --- Pub/Sub ---
   rpc Publish(PublishRequest) returns (PublishResponse);
+  rpc CreateTopic(TopicRequest) returns (StatusResponse);
+  rpc CreateSubscription(SubscriptionRequest) returns (StatusResponse);
   
   // --- Cloud Tasks ---
   rpc CreateTask(TaskRequest) returns (TaskResponse);
@@ -26,6 +28,8 @@ message StatusResponse { bool success = 1; }
 // Messaging Messages
 message PublishRequest { string topic = 1; bytes data = 2; }
 message PublishResponse { string message_id = 1; }
+message TopicRequest { string topic_id = 1; }
+message SubscriptionRequest { string subscription_id = 1; string topic_id = 2; }
 
 // Task Messages
 message TaskRequest { string queue = 1; string payload = 2; }

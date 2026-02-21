@@ -162,6 +162,102 @@ func (x *PublishResponse) GetMessageId() string {
 	return ""
 }
 
+type TopicRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TopicId       string                 `protobuf:"bytes,1,opt,name=topic_id,json=topicId,proto3" json:"topic_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TopicRequest) Reset() {
+	*x = TopicRequest{}
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TopicRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TopicRequest) ProtoMessage() {}
+
+func (x *TopicRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TopicRequest.ProtoReflect.Descriptor instead.
+func (*TopicRequest) Descriptor() ([]byte, []int) {
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *TopicRequest) GetTopicId() string {
+	if x != nil {
+		return x.TopicId
+	}
+	return ""
+}
+
+type SubscriptionRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SubscriptionId string                 `protobuf:"bytes,1,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
+	TopicId        string                 `protobuf:"bytes,2,opt,name=topic_id,json=topicId,proto3" json:"topic_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SubscriptionRequest) Reset() {
+	*x = SubscriptionRequest{}
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionRequest) ProtoMessage() {}
+
+func (x *SubscriptionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionRequest.ProtoReflect.Descriptor instead.
+func (*SubscriptionRequest) Descriptor() ([]byte, []int) {
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SubscriptionRequest) GetSubscriptionId() string {
+	if x != nil {
+		return x.SubscriptionId
+	}
+	return ""
+}
+
+func (x *SubscriptionRequest) GetTopicId() string {
+	if x != nil {
+		return x.TopicId
+	}
+	return ""
+}
+
 // Task Messages
 type TaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -173,7 +269,7 @@ type TaskRequest struct {
 
 func (x *TaskRequest) Reset() {
 	*x = TaskRequest{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[3]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -185,7 +281,7 @@ func (x *TaskRequest) String() string {
 func (*TaskRequest) ProtoMessage() {}
 
 func (x *TaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[3]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -198,7 +294,7 @@ func (x *TaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskRequest.ProtoReflect.Descriptor instead.
 func (*TaskRequest) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{3}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *TaskRequest) GetQueue() string {
@@ -224,7 +320,7 @@ type TaskResponse struct {
 
 func (x *TaskResponse) Reset() {
 	*x = TaskResponse{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[4]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -236,7 +332,7 @@ func (x *TaskResponse) String() string {
 func (*TaskResponse) ProtoMessage() {}
 
 func (x *TaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[4]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -249,7 +345,7 @@ func (x *TaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskResponse.ProtoReflect.Descriptor instead.
 func (*TaskResponse) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{4}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *TaskResponse) GetTaskId() string {
@@ -271,7 +367,7 @@ type JobRequest struct {
 
 func (x *JobRequest) Reset() {
 	*x = JobRequest{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[5]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -283,7 +379,7 @@ func (x *JobRequest) String() string {
 func (*JobRequest) ProtoMessage() {}
 
 func (x *JobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[5]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -296,7 +392,7 @@ func (x *JobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobRequest.ProtoReflect.Descriptor instead.
 func (*JobRequest) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{5}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *JobRequest) GetName() string {
@@ -329,7 +425,7 @@ type JobResponse struct {
 
 func (x *JobResponse) Reset() {
 	*x = JobResponse{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[6]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -341,7 +437,7 @@ func (x *JobResponse) String() string {
 func (*JobResponse) ProtoMessage() {}
 
 func (x *JobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[6]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -354,7 +450,7 @@ func (x *JobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JobResponse.ProtoReflect.Descriptor instead.
 func (*JobResponse) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{6}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *JobResponse) GetJobId() string {
@@ -375,7 +471,7 @@ type WorkflowRequest struct {
 
 func (x *WorkflowRequest) Reset() {
 	*x = WorkflowRequest{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[7]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -387,7 +483,7 @@ func (x *WorkflowRequest) String() string {
 func (*WorkflowRequest) ProtoMessage() {}
 
 func (x *WorkflowRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[7]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -400,7 +496,7 @@ func (x *WorkflowRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRequest.ProtoReflect.Descriptor instead.
 func (*WorkflowRequest) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{7}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *WorkflowRequest) GetWorkflowId() string {
@@ -427,7 +523,7 @@ type WorkflowResponse struct {
 
 func (x *WorkflowResponse) Reset() {
 	*x = WorkflowResponse{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[8]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -439,7 +535,7 @@ func (x *WorkflowResponse) String() string {
 func (*WorkflowResponse) ProtoMessage() {}
 
 func (x *WorkflowResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[8]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -452,7 +548,7 @@ func (x *WorkflowResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowResponse.ProtoReflect.Descriptor instead.
 func (*WorkflowResponse) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{8}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *WorkflowResponse) GetOutputJson() string {
@@ -482,7 +578,7 @@ type TriggerRequest struct {
 
 func (x *TriggerRequest) Reset() {
 	*x = TriggerRequest{}
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[9]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -494,7 +590,7 @@ func (x *TriggerRequest) String() string {
 func (*TriggerRequest) ProtoMessage() {}
 
 func (x *TriggerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[9]
+	mi := &file_olympus_orchestration_v1_orchestration_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -507,7 +603,7 @@ func (x *TriggerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerRequest.ProtoReflect.Descriptor instead.
 func (*TriggerRequest) Descriptor() ([]byte, []int) {
-	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{9}
+	return file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *TriggerRequest) GetTriggerId() string {
@@ -550,7 +646,12 @@ const file_olympus_orchestration_v1_orchestration_proto_rawDesc = "" +
 	"\x04data\x18\x02 \x01(\fR\x04data\"0\n" +
 	"\x0fPublishResponse\x12\x1d\n" +
 	"\n" +
-	"message_id\x18\x01 \x01(\tR\tmessageId\"=\n" +
+	"message_id\x18\x01 \x01(\tR\tmessageId\")\n" +
+	"\fTopicRequest\x12\x19\n" +
+	"\btopic_id\x18\x01 \x01(\tR\atopicId\"Y\n" +
+	"\x13SubscriptionRequest\x12'\n" +
+	"\x0fsubscription_id\x18\x01 \x01(\tR\x0esubscriptionId\x12\x19\n" +
+	"\btopic_id\x18\x02 \x01(\tR\atopicId\"=\n" +
 	"\vTaskRequest\x12\x14\n" +
 	"\x05queue\x18\x01 \x01(\tR\x05queue\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\tR\apayload\"'\n" +
@@ -582,9 +683,11 @@ const file_olympus_orchestration_v1_orchestration_proto_rawDesc = "" +
 	"\afilters\x18\x04 \x03(\v25.olympus.orchestration.v1.TriggerRequest.FiltersEntryR\afilters\x1a:\n" +
 	"\fFiltersEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xfe\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\xce\x05\n" +
 	"\x14OrchestrationService\x12^\n" +
-	"\aPublish\x12(.olympus.orchestration.v1.PublishRequest\x1a).olympus.orchestration.v1.PublishResponse\x12[\n" +
+	"\aPublish\x12(.olympus.orchestration.v1.PublishRequest\x1a).olympus.orchestration.v1.PublishResponse\x12_\n" +
+	"\vCreateTopic\x12&.olympus.orchestration.v1.TopicRequest\x1a(.olympus.orchestration.v1.StatusResponse\x12m\n" +
+	"\x12CreateSubscription\x12-.olympus.orchestration.v1.SubscriptionRequest\x1a(.olympus.orchestration.v1.StatusResponse\x12[\n" +
 	"\n" +
 	"CreateTask\x12%.olympus.orchestration.v1.TaskRequest\x1a&.olympus.orchestration.v1.TaskResponse\x12X\n" +
 	"\tCreateJob\x12$.olympus.orchestration.v1.JobRequest\x1a%.olympus.orchestration.v1.JobResponse\x12h\n" +
@@ -603,34 +706,40 @@ func file_olympus_orchestration_v1_orchestration_proto_rawDescGZIP() []byte {
 	return file_olympus_orchestration_v1_orchestration_proto_rawDescData
 }
 
-var file_olympus_orchestration_v1_orchestration_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_olympus_orchestration_v1_orchestration_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_olympus_orchestration_v1_orchestration_proto_goTypes = []any{
-	(*StatusResponse)(nil),   // 0: olympus.orchestration.v1.StatusResponse
-	(*PublishRequest)(nil),   // 1: olympus.orchestration.v1.PublishRequest
-	(*PublishResponse)(nil),  // 2: olympus.orchestration.v1.PublishResponse
-	(*TaskRequest)(nil),      // 3: olympus.orchestration.v1.TaskRequest
-	(*TaskResponse)(nil),     // 4: olympus.orchestration.v1.TaskResponse
-	(*JobRequest)(nil),       // 5: olympus.orchestration.v1.JobRequest
-	(*JobResponse)(nil),      // 6: olympus.orchestration.v1.JobResponse
-	(*WorkflowRequest)(nil),  // 7: olympus.orchestration.v1.WorkflowRequest
-	(*WorkflowResponse)(nil), // 8: olympus.orchestration.v1.WorkflowResponse
-	(*TriggerRequest)(nil),   // 9: olympus.orchestration.v1.TriggerRequest
-	nil,                      // 10: olympus.orchestration.v1.TriggerRequest.FiltersEntry
+	(*StatusResponse)(nil),      // 0: olympus.orchestration.v1.StatusResponse
+	(*PublishRequest)(nil),      // 1: olympus.orchestration.v1.PublishRequest
+	(*PublishResponse)(nil),     // 2: olympus.orchestration.v1.PublishResponse
+	(*TopicRequest)(nil),        // 3: olympus.orchestration.v1.TopicRequest
+	(*SubscriptionRequest)(nil), // 4: olympus.orchestration.v1.SubscriptionRequest
+	(*TaskRequest)(nil),         // 5: olympus.orchestration.v1.TaskRequest
+	(*TaskResponse)(nil),        // 6: olympus.orchestration.v1.TaskResponse
+	(*JobRequest)(nil),          // 7: olympus.orchestration.v1.JobRequest
+	(*JobResponse)(nil),         // 8: olympus.orchestration.v1.JobResponse
+	(*WorkflowRequest)(nil),     // 9: olympus.orchestration.v1.WorkflowRequest
+	(*WorkflowResponse)(nil),    // 10: olympus.orchestration.v1.WorkflowResponse
+	(*TriggerRequest)(nil),      // 11: olympus.orchestration.v1.TriggerRequest
+	nil,                         // 12: olympus.orchestration.v1.TriggerRequest.FiltersEntry
 }
 var file_olympus_orchestration_v1_orchestration_proto_depIdxs = []int32{
-	10, // 0: olympus.orchestration.v1.TriggerRequest.filters:type_name -> olympus.orchestration.v1.TriggerRequest.FiltersEntry
+	12, // 0: olympus.orchestration.v1.TriggerRequest.filters:type_name -> olympus.orchestration.v1.TriggerRequest.FiltersEntry
 	1,  // 1: olympus.orchestration.v1.OrchestrationService.Publish:input_type -> olympus.orchestration.v1.PublishRequest
-	3,  // 2: olympus.orchestration.v1.OrchestrationService.CreateTask:input_type -> olympus.orchestration.v1.TaskRequest
-	5,  // 3: olympus.orchestration.v1.OrchestrationService.CreateJob:input_type -> olympus.orchestration.v1.JobRequest
-	7,  // 4: olympus.orchestration.v1.OrchestrationService.ExecuteWorkflow:input_type -> olympus.orchestration.v1.WorkflowRequest
-	9,  // 5: olympus.orchestration.v1.OrchestrationService.RegisterTrigger:input_type -> olympus.orchestration.v1.TriggerRequest
-	2,  // 6: olympus.orchestration.v1.OrchestrationService.Publish:output_type -> olympus.orchestration.v1.PublishResponse
-	4,  // 7: olympus.orchestration.v1.OrchestrationService.CreateTask:output_type -> olympus.orchestration.v1.TaskResponse
-	6,  // 8: olympus.orchestration.v1.OrchestrationService.CreateJob:output_type -> olympus.orchestration.v1.JobResponse
-	8,  // 9: olympus.orchestration.v1.OrchestrationService.ExecuteWorkflow:output_type -> olympus.orchestration.v1.WorkflowResponse
-	0,  // 10: olympus.orchestration.v1.OrchestrationService.RegisterTrigger:output_type -> olympus.orchestration.v1.StatusResponse
-	6,  // [6:11] is the sub-list for method output_type
-	1,  // [1:6] is the sub-list for method input_type
+	3,  // 2: olympus.orchestration.v1.OrchestrationService.CreateTopic:input_type -> olympus.orchestration.v1.TopicRequest
+	4,  // 3: olympus.orchestration.v1.OrchestrationService.CreateSubscription:input_type -> olympus.orchestration.v1.SubscriptionRequest
+	5,  // 4: olympus.orchestration.v1.OrchestrationService.CreateTask:input_type -> olympus.orchestration.v1.TaskRequest
+	7,  // 5: olympus.orchestration.v1.OrchestrationService.CreateJob:input_type -> olympus.orchestration.v1.JobRequest
+	9,  // 6: olympus.orchestration.v1.OrchestrationService.ExecuteWorkflow:input_type -> olympus.orchestration.v1.WorkflowRequest
+	11, // 7: olympus.orchestration.v1.OrchestrationService.RegisterTrigger:input_type -> olympus.orchestration.v1.TriggerRequest
+	2,  // 8: olympus.orchestration.v1.OrchestrationService.Publish:output_type -> olympus.orchestration.v1.PublishResponse
+	0,  // 9: olympus.orchestration.v1.OrchestrationService.CreateTopic:output_type -> olympus.orchestration.v1.StatusResponse
+	0,  // 10: olympus.orchestration.v1.OrchestrationService.CreateSubscription:output_type -> olympus.orchestration.v1.StatusResponse
+	6,  // 11: olympus.orchestration.v1.OrchestrationService.CreateTask:output_type -> olympus.orchestration.v1.TaskResponse
+	8,  // 12: olympus.orchestration.v1.OrchestrationService.CreateJob:output_type -> olympus.orchestration.v1.JobResponse
+	10, // 13: olympus.orchestration.v1.OrchestrationService.ExecuteWorkflow:output_type -> olympus.orchestration.v1.WorkflowResponse
+	0,  // 14: olympus.orchestration.v1.OrchestrationService.RegisterTrigger:output_type -> olympus.orchestration.v1.StatusResponse
+	8,  // [8:15] is the sub-list for method output_type
+	1,  // [1:8] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -647,7 +756,7 @@ func file_olympus_orchestration_v1_orchestration_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_olympus_orchestration_v1_orchestration_proto_rawDesc), len(file_olympus_orchestration_v1_orchestration_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

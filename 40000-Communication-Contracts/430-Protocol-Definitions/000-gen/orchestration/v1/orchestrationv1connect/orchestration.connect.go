@@ -36,6 +36,12 @@ const (
 	// OrchestrationServicePublishProcedure is the fully-qualified name of the OrchestrationService's
 	// Publish RPC.
 	OrchestrationServicePublishProcedure = "/olympus.orchestration.v1.OrchestrationService/Publish"
+	// OrchestrationServiceCreateTopicProcedure is the fully-qualified name of the
+	// OrchestrationService's CreateTopic RPC.
+	OrchestrationServiceCreateTopicProcedure = "/olympus.orchestration.v1.OrchestrationService/CreateTopic"
+	// OrchestrationServiceCreateSubscriptionProcedure is the fully-qualified name of the
+	// OrchestrationService's CreateSubscription RPC.
+	OrchestrationServiceCreateSubscriptionProcedure = "/olympus.orchestration.v1.OrchestrationService/CreateSubscription"
 	// OrchestrationServiceCreateTaskProcedure is the fully-qualified name of the OrchestrationService's
 	// CreateTask RPC.
 	OrchestrationServiceCreateTaskProcedure = "/olympus.orchestration.v1.OrchestrationService/CreateTask"
@@ -55,6 +61,8 @@ const (
 type OrchestrationServiceClient interface {
 	// --- Pub/Sub ---
 	Publish(context.Context, *connect.Request[v1.PublishRequest]) (*connect.Response[v1.PublishResponse], error)
+	CreateTopic(context.Context, *connect.Request[v1.TopicRequest]) (*connect.Response[v1.StatusResponse], error)
+	CreateSubscription(context.Context, *connect.Request[v1.SubscriptionRequest]) (*connect.Response[v1.StatusResponse], error)
 	// --- Cloud Tasks ---
 	CreateTask(context.Context, *connect.Request[v1.TaskRequest]) (*connect.Response[v1.TaskResponse], error)
 	// --- Cloud Scheduler ---
@@ -81,6 +89,18 @@ func NewOrchestrationServiceClient(httpClient connect.HTTPClient, baseURL string
 			httpClient,
 			baseURL+OrchestrationServicePublishProcedure,
 			connect.WithSchema(orchestrationServiceMethods.ByName("Publish")),
+			connect.WithClientOptions(opts...),
+		),
+		createTopic: connect.NewClient[v1.TopicRequest, v1.StatusResponse](
+			httpClient,
+			baseURL+OrchestrationServiceCreateTopicProcedure,
+			connect.WithSchema(orchestrationServiceMethods.ByName("CreateTopic")),
+			connect.WithClientOptions(opts...),
+		),
+		createSubscription: connect.NewClient[v1.SubscriptionRequest, v1.StatusResponse](
+			httpClient,
+			baseURL+OrchestrationServiceCreateSubscriptionProcedure,
+			connect.WithSchema(orchestrationServiceMethods.ByName("CreateSubscription")),
 			connect.WithClientOptions(opts...),
 		),
 		createTask: connect.NewClient[v1.TaskRequest, v1.TaskResponse](
@@ -112,16 +132,28 @@ func NewOrchestrationServiceClient(httpClient connect.HTTPClient, baseURL string
 
 // orchestrationServiceClient implements OrchestrationServiceClient.
 type orchestrationServiceClient struct {
-	publish         *connect.Client[v1.PublishRequest, v1.PublishResponse]
-	createTask      *connect.Client[v1.TaskRequest, v1.TaskResponse]
-	createJob       *connect.Client[v1.JobRequest, v1.JobResponse]
-	executeWorkflow *connect.Client[v1.WorkflowRequest, v1.WorkflowResponse]
-	registerTrigger *connect.Client[v1.TriggerRequest, v1.StatusResponse]
+	publish            *connect.Client[v1.PublishRequest, v1.PublishResponse]
+	createTopic        *connect.Client[v1.TopicRequest, v1.StatusResponse]
+	createSubscription *connect.Client[v1.SubscriptionRequest, v1.StatusResponse]
+	createTask         *connect.Client[v1.TaskRequest, v1.TaskResponse]
+	createJob          *connect.Client[v1.JobRequest, v1.JobResponse]
+	executeWorkflow    *connect.Client[v1.WorkflowRequest, v1.WorkflowResponse]
+	registerTrigger    *connect.Client[v1.TriggerRequest, v1.StatusResponse]
 }
 
 // Publish calls olympus.orchestration.v1.OrchestrationService.Publish.
 func (c *orchestrationServiceClient) Publish(ctx context.Context, req *connect.Request[v1.PublishRequest]) (*connect.Response[v1.PublishResponse], error) {
 	return c.publish.CallUnary(ctx, req)
+}
+
+// CreateTopic calls olympus.orchestration.v1.OrchestrationService.CreateTopic.
+func (c *orchestrationServiceClient) CreateTopic(ctx context.Context, req *connect.Request[v1.TopicRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return c.createTopic.CallUnary(ctx, req)
+}
+
+// CreateSubscription calls olympus.orchestration.v1.OrchestrationService.CreateSubscription.
+func (c *orchestrationServiceClient) CreateSubscription(ctx context.Context, req *connect.Request[v1.SubscriptionRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return c.createSubscription.CallUnary(ctx, req)
 }
 
 // CreateTask calls olympus.orchestration.v1.OrchestrationService.CreateTask.
@@ -149,6 +181,8 @@ func (c *orchestrationServiceClient) RegisterTrigger(ctx context.Context, req *c
 type OrchestrationServiceHandler interface {
 	// --- Pub/Sub ---
 	Publish(context.Context, *connect.Request[v1.PublishRequest]) (*connect.Response[v1.PublishResponse], error)
+	CreateTopic(context.Context, *connect.Request[v1.TopicRequest]) (*connect.Response[v1.StatusResponse], error)
+	CreateSubscription(context.Context, *connect.Request[v1.SubscriptionRequest]) (*connect.Response[v1.StatusResponse], error)
 	// --- Cloud Tasks ---
 	CreateTask(context.Context, *connect.Request[v1.TaskRequest]) (*connect.Response[v1.TaskResponse], error)
 	// --- Cloud Scheduler ---
@@ -170,6 +204,18 @@ func NewOrchestrationServiceHandler(svc OrchestrationServiceHandler, opts ...con
 		OrchestrationServicePublishProcedure,
 		svc.Publish,
 		connect.WithSchema(orchestrationServiceMethods.ByName("Publish")),
+		connect.WithHandlerOptions(opts...),
+	)
+	orchestrationServiceCreateTopicHandler := connect.NewUnaryHandler(
+		OrchestrationServiceCreateTopicProcedure,
+		svc.CreateTopic,
+		connect.WithSchema(orchestrationServiceMethods.ByName("CreateTopic")),
+		connect.WithHandlerOptions(opts...),
+	)
+	orchestrationServiceCreateSubscriptionHandler := connect.NewUnaryHandler(
+		OrchestrationServiceCreateSubscriptionProcedure,
+		svc.CreateSubscription,
+		connect.WithSchema(orchestrationServiceMethods.ByName("CreateSubscription")),
 		connect.WithHandlerOptions(opts...),
 	)
 	orchestrationServiceCreateTaskHandler := connect.NewUnaryHandler(
@@ -200,6 +246,10 @@ func NewOrchestrationServiceHandler(svc OrchestrationServiceHandler, opts ...con
 		switch r.URL.Path {
 		case OrchestrationServicePublishProcedure:
 			orchestrationServicePublishHandler.ServeHTTP(w, r)
+		case OrchestrationServiceCreateTopicProcedure:
+			orchestrationServiceCreateTopicHandler.ServeHTTP(w, r)
+		case OrchestrationServiceCreateSubscriptionProcedure:
+			orchestrationServiceCreateSubscriptionHandler.ServeHTTP(w, r)
 		case OrchestrationServiceCreateTaskProcedure:
 			orchestrationServiceCreateTaskHandler.ServeHTTP(w, r)
 		case OrchestrationServiceCreateJobProcedure:
@@ -219,6 +269,14 @@ type UnimplementedOrchestrationServiceHandler struct{}
 
 func (UnimplementedOrchestrationServiceHandler) Publish(context.Context, *connect.Request[v1.PublishRequest]) (*connect.Response[v1.PublishResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("olympus.orchestration.v1.OrchestrationService.Publish is not implemented"))
+}
+
+func (UnimplementedOrchestrationServiceHandler) CreateTopic(context.Context, *connect.Request[v1.TopicRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("olympus.orchestration.v1.OrchestrationService.CreateTopic is not implemented"))
+}
+
+func (UnimplementedOrchestrationServiceHandler) CreateSubscription(context.Context, *connect.Request[v1.SubscriptionRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("olympus.orchestration.v1.OrchestrationService.CreateSubscription is not implemented"))
 }
 
 func (UnimplementedOrchestrationServiceHandler) CreateTask(context.Context, *connect.Request[v1.TaskRequest]) (*connect.Response[v1.TaskResponse], error) {
