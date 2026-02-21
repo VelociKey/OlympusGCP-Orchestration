@@ -16,7 +16,12 @@ service OrchestrationService {
 
   // --- Cloud Workflows (Expansion) ---
   rpc ExecuteWorkflow(WorkflowRequest) returns (WorkflowResponse);
+
+  // --- Eventarc (Deepening) ---
+  rpc RegisterTrigger(TriggerRequest) returns (StatusResponse);
 }
+
+message StatusResponse { bool success = 1; }
 
 // Messaging Messages
 message PublishRequest { string topic = 1; bytes data = 2; }
@@ -33,3 +38,11 @@ message JobResponse { string job_id = 1; }
 // Workflow Messages
 message WorkflowRequest { string workflow_id = 1; string input_json = 2; }
 message WorkflowResponse { string output_json = 1; string state = 2; }
+
+// Eventarc Messages
+message TriggerRequest {
+  string trigger_id = 1;
+  string event_type = 2; // e.g. "GCS_OBJECT_FINALIZE"
+  string target_url = 3; // The HTTP endpoint to call
+  map<string, string> filters = 4; // e.g. {"bucket": "my-bucket"}
+}

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -25,6 +26,8 @@ import (
 type OrchestrationServer struct {
 	pubsubClient *pubsub.Client
 	scheduler    *cron.Cron
+	mu           sync.RWMutex
+	triggers     map[string]*orchestrationv1.TriggerRequest
 }
 
 func (s *OrchestrationServer) Publish(ctx context.Context, req *connect.Request[orchestrationv1.PublishRequest]) (*connect.Response[orchestrationv1.PublishResponse], error) {
@@ -41,36 +44,35 @@ func (s *OrchestrationServer) CreateTask(ctx context.Context, req *connect.Reque
 	return connect.NewResponse(&orchestrationv1.TaskResponse{TaskId: taskID}), nil
 }
 
-// HIGH-FIDELITY DEEPENING: Cloud Scheduler Substrate
 func (s *OrchestrationServer) CreateJob(ctx context.Context, req *connect.Request[orchestrationv1.JobRequest]) (*connect.Response[orchestrationv1.JobResponse], error) {
-	slog.Info("Orchestration: Creating High-Fidelity Scheduler Job", "name", req.Msg.Name, "schedule", req.Msg.Schedule)
-	
 	jobID := fmt.Sprintf("job-%s", req.Msg.Name)
 	target := req.Msg.Target
-
 	_, err := s.scheduler.AddFunc(req.Msg.Schedule, func() {
 		slog.Info("⏰ Scheduler Triggered", "job", req.Msg.Name, "target", target)
 		http.Post(target, "application/json", bytes.NewBuffer([]byte(`{"trigger": "cloud_scheduler"}`)))
 	})
-
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid cron schedule: %v", err))
-	}
-
+	if err != nil { return nil, connect.NewError(connect.CodeInvalidArgument, err) }
 	return connect.NewResponse(&orchestrationv1.JobResponse{JobId: jobID}), nil
 }
 
 func (s *OrchestrationServer) ExecuteWorkflow(ctx context.Context, req *connect.Request[orchestrationv1.WorkflowRequest]) (*connect.Response[orchestrationv1.WorkflowResponse], error) {
 	slog.Info("Orchestration: Executing Workflow Logic Engine", "id", req.Msg.WorkflowId)
 	state := map[string]interface{}{"status": "running"}
-	if err := json.Unmarshal([]byte(req.Msg.InputJson), &state); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
-	}
+	json.Unmarshal([]byte(req.Msg.InputJson), &state)
 	time.Sleep(100 * time.Millisecond)
 	state["status"] = "completed"
-	state["step_count"] = 5
 	out, _ := json.Marshal(state)
 	return connect.NewResponse(&orchestrationv1.WorkflowResponse{State: "SUCCEEDED", OutputJson: string(out)}), nil
+}
+
+// --- Eventarc (Deepening) ---
+
+func (s *OrchestrationServer) RegisterTrigger(ctx context.Context, req *connect.Request[orchestrationv1.TriggerRequest]) (*connect.Response[orchestrationv1.StatusResponse], error) {
+	slog.Info("Orchestration: Registering Eventarc Trigger", "id", req.Msg.TriggerId, "type", req.Msg.EventType)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.triggers[req.Msg.TriggerId] = req.Msg
+	return connect.NewResponse(&orchestrationv1.StatusResponse{Success: true}), nil
 }
 
 func (s *OrchestrationServer) RunEventarcListener() {
@@ -81,17 +83,42 @@ func (s *OrchestrationServer) RunEventarcListener() {
 	if !exists {
 		s.pubsubClient.CreateSubscription(ctx, "orchestration-eventarc-trigger", pubsub.SubscriptionConfig{Topic: topic})
 	}
-	slog.Info("Orchestration: Eventarc Engine Active")
+
+	slog.Info("Orchestration: Fleet Eventarc Bus Active")
+
 	sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		var event map[string]string
 		json.Unmarshal(msg.Data, &event)
-		slog.Info("🔔 Eventarc Triggered", "type", event["type"])
+		eventType := event["type"]
+
+		s.mu.RLock()
+		defer s.mu.RUnlock()
+
+		for _, trigger := range s.triggers {
+			if trigger.EventType == eventType {
+				// Check filters
+				match := true
+				for k, v := range trigger.Filters {
+					if event[k] != v {
+						match = false
+						break
+					}
+				}
+
+				if match {
+					slog.Info("🎯 Eventarc Match Found", "trigger", trigger.TriggerId, "target", trigger.TargetUrl)
+					go func(url string, data []byte) {
+						http.Post(url, "application/json", bytes.NewBuffer(data))
+					}(trigger.TargetUrl, msg.Data)
+				}
+			}
+		}
 		msg.Ack()
 	})
 }
 
 func main() {
-	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 8)...")
+	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 9)...")
 	w := whisper.New("OrchestrationManager", "gcp_orchestration.lpsv")
 	defer w.Close()
 
@@ -101,13 +128,13 @@ func main() {
 	psClient, err := pubsub.NewClient(ctx, "olympus-project", option.WithEndpoint(psHost), option.WithoutAuthentication())
 	if err != nil { slog.Error("Failed to create pubsub client", "error", err); os.Exit(1) }
 
-	// Start Scheduler
 	sched := cron.New()
 	sched.Start()
 
 	server := &OrchestrationServer{
 		pubsubClient: psClient,
 		scheduler:    sched,
+		triggers:     make(map[string]*orchestrationv1.TriggerRequest),
 	}
 	
 	go server.RunEventarcListener()

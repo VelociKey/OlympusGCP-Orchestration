@@ -45,6 +45,9 @@ const (
 	// OrchestrationServiceExecuteWorkflowProcedure is the fully-qualified name of the
 	// OrchestrationService's ExecuteWorkflow RPC.
 	OrchestrationServiceExecuteWorkflowProcedure = "/olympus.orchestration.v1.OrchestrationService/ExecuteWorkflow"
+	// OrchestrationServiceRegisterTriggerProcedure is the fully-qualified name of the
+	// OrchestrationService's RegisterTrigger RPC.
+	OrchestrationServiceRegisterTriggerProcedure = "/olympus.orchestration.v1.OrchestrationService/RegisterTrigger"
 )
 
 // OrchestrationServiceClient is a client for the olympus.orchestration.v1.OrchestrationService
@@ -58,6 +61,8 @@ type OrchestrationServiceClient interface {
 	CreateJob(context.Context, *connect.Request[v1.JobRequest]) (*connect.Response[v1.JobResponse], error)
 	// --- Cloud Workflows (Expansion) ---
 	ExecuteWorkflow(context.Context, *connect.Request[v1.WorkflowRequest]) (*connect.Response[v1.WorkflowResponse], error)
+	// --- Eventarc (Deepening) ---
+	RegisterTrigger(context.Context, *connect.Request[v1.TriggerRequest]) (*connect.Response[v1.StatusResponse], error)
 }
 
 // NewOrchestrationServiceClient constructs a client for the
@@ -96,6 +101,12 @@ func NewOrchestrationServiceClient(httpClient connect.HTTPClient, baseURL string
 			connect.WithSchema(orchestrationServiceMethods.ByName("ExecuteWorkflow")),
 			connect.WithClientOptions(opts...),
 		),
+		registerTrigger: connect.NewClient[v1.TriggerRequest, v1.StatusResponse](
+			httpClient,
+			baseURL+OrchestrationServiceRegisterTriggerProcedure,
+			connect.WithSchema(orchestrationServiceMethods.ByName("RegisterTrigger")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -105,6 +116,7 @@ type orchestrationServiceClient struct {
 	createTask      *connect.Client[v1.TaskRequest, v1.TaskResponse]
 	createJob       *connect.Client[v1.JobRequest, v1.JobResponse]
 	executeWorkflow *connect.Client[v1.WorkflowRequest, v1.WorkflowResponse]
+	registerTrigger *connect.Client[v1.TriggerRequest, v1.StatusResponse]
 }
 
 // Publish calls olympus.orchestration.v1.OrchestrationService.Publish.
@@ -127,6 +139,11 @@ func (c *orchestrationServiceClient) ExecuteWorkflow(ctx context.Context, req *c
 	return c.executeWorkflow.CallUnary(ctx, req)
 }
 
+// RegisterTrigger calls olympus.orchestration.v1.OrchestrationService.RegisterTrigger.
+func (c *orchestrationServiceClient) RegisterTrigger(ctx context.Context, req *connect.Request[v1.TriggerRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return c.registerTrigger.CallUnary(ctx, req)
+}
+
 // OrchestrationServiceHandler is an implementation of the
 // olympus.orchestration.v1.OrchestrationService service.
 type OrchestrationServiceHandler interface {
@@ -138,6 +155,8 @@ type OrchestrationServiceHandler interface {
 	CreateJob(context.Context, *connect.Request[v1.JobRequest]) (*connect.Response[v1.JobResponse], error)
 	// --- Cloud Workflows (Expansion) ---
 	ExecuteWorkflow(context.Context, *connect.Request[v1.WorkflowRequest]) (*connect.Response[v1.WorkflowResponse], error)
+	// --- Eventarc (Deepening) ---
+	RegisterTrigger(context.Context, *connect.Request[v1.TriggerRequest]) (*connect.Response[v1.StatusResponse], error)
 }
 
 // NewOrchestrationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -171,6 +190,12 @@ func NewOrchestrationServiceHandler(svc OrchestrationServiceHandler, opts ...con
 		connect.WithSchema(orchestrationServiceMethods.ByName("ExecuteWorkflow")),
 		connect.WithHandlerOptions(opts...),
 	)
+	orchestrationServiceRegisterTriggerHandler := connect.NewUnaryHandler(
+		OrchestrationServiceRegisterTriggerProcedure,
+		svc.RegisterTrigger,
+		connect.WithSchema(orchestrationServiceMethods.ByName("RegisterTrigger")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/olympus.orchestration.v1.OrchestrationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case OrchestrationServicePublishProcedure:
@@ -181,6 +206,8 @@ func NewOrchestrationServiceHandler(svc OrchestrationServiceHandler, opts ...con
 			orchestrationServiceCreateJobHandler.ServeHTTP(w, r)
 		case OrchestrationServiceExecuteWorkflowProcedure:
 			orchestrationServiceExecuteWorkflowHandler.ServeHTTP(w, r)
+		case OrchestrationServiceRegisterTriggerProcedure:
+			orchestrationServiceRegisterTriggerHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -204,4 +231,8 @@ func (UnimplementedOrchestrationServiceHandler) CreateJob(context.Context, *conn
 
 func (UnimplementedOrchestrationServiceHandler) ExecuteWorkflow(context.Context, *connect.Request[v1.WorkflowRequest]) (*connect.Response[v1.WorkflowResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("olympus.orchestration.v1.OrchestrationService.ExecuteWorkflow is not implemented"))
+}
+
+func (UnimplementedOrchestrationServiceHandler) RegisterTrigger(context.Context, *connect.Request[v1.TriggerRequest]) (*connect.Response[v1.StatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("olympus.orchestration.v1.OrchestrationService.RegisterTrigger is not implemented"))
 }
