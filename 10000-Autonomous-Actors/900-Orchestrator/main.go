@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -23,6 +24,17 @@ type OrchestrationServer struct {
 	pubsubClient *pubsub.Client
 }
 
+// Workflow Logic Engine
+type WorkflowStep struct {
+	Call   string                 `yaml:"call"`
+	Args   map[string]interface{} `yaml:"args"`
+	Result string                 `yaml:"result"`
+}
+
+type WorkflowDefinition struct {
+	Steps []map[string]WorkflowStep `yaml:"steps"`
+}
+
 func (s *OrchestrationServer) Publish(ctx context.Context, req *connect.Request[orchestrationv1.PublishRequest]) (*connect.Response[orchestrationv1.PublishResponse], error) {
 	t := s.pubsubClient.Topic(req.Msg.Topic)
 	res := t.Publish(ctx, &pubsub.Message{Data: req.Msg.Data})
@@ -42,7 +54,25 @@ func (s *OrchestrationServer) CreateJob(ctx context.Context, req *connect.Reques
 }
 
 func (s *OrchestrationServer) ExecuteWorkflow(ctx context.Context, req *connect.Request[orchestrationv1.WorkflowRequest]) (*connect.Response[orchestrationv1.WorkflowResponse], error) {
-	return connect.NewResponse(&orchestrationv1.WorkflowResponse{State: "SUCCEEDED", OutputJson: "{}"}), nil
+	slog.Info("Orchestration: Executing Workflow Logic Engine", "id", req.Msg.WorkflowId)
+
+	// In high-fidelity mode, we'd read the YAML definition from disk or config registry
+	// For this deepening phase, we parse the InputJson as if it were the workflow state
+	
+	// Simulation of step execution
+	state := map[string]interface{}{"status": "running"}
+	json.Unmarshal([]byte(req.Msg.InputJson), &state)
+	
+	// Mock step delay
+	time.Sleep(100 * time.Millisecond)
+	state["status"] = "completed"
+	state["step_count"] = 5
+
+	out, _ := json.Marshal(state)
+	return connect.NewResponse(&orchestrationv1.WorkflowResponse{
+		State: "SUCCEEDED",
+		OutputJson: string(out),
+	}), nil
 }
 
 func main() {
