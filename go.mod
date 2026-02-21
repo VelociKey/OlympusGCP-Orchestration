@@ -5,6 +5,7 @@ go 1.25.7
 require (
 	cloud.google.com/go/pubsub v1.50.1
 	connectrpc.com/connect v1.19.1
+	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/net v0.50.0
 	google.golang.org/api v0.267.0
 	google.golang.org/protobuf v1.36.11

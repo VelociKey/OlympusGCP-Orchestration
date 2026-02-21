@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	"connectrpc.com/connect"
+	"github.com/robfig/cron/v3"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/api/option"
@@ -22,6 +24,7 @@ import (
 
 type OrchestrationServer struct {
 	pubsubClient *pubsub.Client
+	scheduler    *cron.Cron
 }
 
 func (s *OrchestrationServer) Publish(ctx context.Context, req *connect.Request[orchestrationv1.PublishRequest]) (*connect.Response[orchestrationv1.PublishResponse], error) {
@@ -38,8 +41,22 @@ func (s *OrchestrationServer) CreateTask(ctx context.Context, req *connect.Reque
 	return connect.NewResponse(&orchestrationv1.TaskResponse{TaskId: taskID}), nil
 }
 
+// HIGH-FIDELITY DEEPENING: Cloud Scheduler Substrate
 func (s *OrchestrationServer) CreateJob(ctx context.Context, req *connect.Request[orchestrationv1.JobRequest]) (*connect.Response[orchestrationv1.JobResponse], error) {
+	slog.Info("Orchestration: Creating High-Fidelity Scheduler Job", "name", req.Msg.Name, "schedule", req.Msg.Schedule)
+	
 	jobID := fmt.Sprintf("job-%s", req.Msg.Name)
+	target := req.Msg.Target
+
+	_, err := s.scheduler.AddFunc(req.Msg.Schedule, func() {
+		slog.Info("⏰ Scheduler Triggered", "job", req.Msg.Name, "target", target)
+		http.Post(target, "application/json", bytes.NewBuffer([]byte(`{"trigger": "cloud_scheduler"}`)))
+	})
+
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid cron schedule: %v", err))
+	}
+
 	return connect.NewResponse(&orchestrationv1.JobResponse{JobId: jobID}), nil
 }
 
@@ -53,44 +70,28 @@ func (s *OrchestrationServer) ExecuteWorkflow(ctx context.Context, req *connect.
 	state["status"] = "completed"
 	state["step_count"] = 5
 	out, _ := json.Marshal(state)
-	return connect.NewResponse(&orchestrationv1.WorkflowResponse{
-		State: "SUCCEEDED",
-		OutputJson: string(out),
-	}), nil
+	return connect.NewResponse(&orchestrationv1.WorkflowResponse{State: "SUCCEEDED", OutputJson: string(out)}), nil
 }
 
-// HIGH-FIDELITY DEEPENING: Eventarc Substrate Listener
 func (s *OrchestrationServer) RunEventarcListener() {
 	ctx := context.Background()
-	
-	// 1. Ensure Subscription exists on the Fleet Event Bus
 	topic := s.pubsubClient.Topic("substrate-events")
 	sub := s.pubsubClient.Subscription("orchestration-eventarc-trigger")
-	
 	exists, _ := sub.Exists(ctx)
 	if !exists {
-		s.pubsubClient.CreateSubscription(ctx, "orchestration-eventarc-trigger", pubsub.SubscriptionConfig{
-			Topic: topic,
-		})
+		s.pubsubClient.CreateSubscription(ctx, "orchestration-eventarc-trigger", pubsub.SubscriptionConfig{Topic: topic})
 	}
-
-	slog.Info("Orchestration: Eventarc Engine Active - Listening for Fleet Substrate Events...")
-
+	slog.Info("Orchestration: Eventarc Engine Active")
 	sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
 		var event map[string]string
 		json.Unmarshal(msg.Data, &event)
-		
-		slog.Info("🔔 Eventarc Triggered", "type", event["type"], "source", event["bucket"])
-		
-		// In a real high-fidelity implementation, we'd lookup triggers in a local DB
-		// and fire the associated Workflow or Cloud Run service.
-		
+		slog.Info("🔔 Eventarc Triggered", "type", event["type"])
 		msg.Ack()
 	})
 }
 
 func main() {
-	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 7)...")
+	slog.Info("OrchestrationManager: Booting Event-Driven Substrate (Phase 8)...")
 	w := whisper.New("OrchestrationManager", "gcp_orchestration.lpsv")
 	defer w.Close()
 
@@ -100,9 +101,15 @@ func main() {
 	psClient, err := pubsub.NewClient(ctx, "olympus-project", option.WithEndpoint(psHost), option.WithoutAuthentication())
 	if err != nil { slog.Error("Failed to create pubsub client", "error", err); os.Exit(1) }
 
-	server := &OrchestrationServer{pubsubClient: psClient}
+	// Start Scheduler
+	sched := cron.New()
+	sched.Start()
+
+	server := &OrchestrationServer{
+		pubsubClient: psClient,
+		scheduler:    sched,
+	}
 	
-	// Start async listener for substrate events (Eventarc emulation)
 	go server.RunEventarcListener()
 
 	mux := http.NewServeMux()
