@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package olympus.orchestration.v1;
+
+option go_package = "OlympusGCP-Orchestration/40000-Communication-Contracts/430-Protocol-Definitions/000-gen/orchestration/v1;orchestrationv1";
+
+service OrchestrationService {
+  // --- Pub/Sub ---
+  rpc Publish(PublishRequest) returns (PublishResponse);
+  
+  // --- Cloud Tasks ---
+  rpc CreateTask(TaskRequest) returns (TaskResponse);
+  
+  // --- Cloud Scheduler ---
+  rpc CreateJob(JobRequest) returns (JobResponse);
+
+  // --- Cloud Workflows (Expansion) ---
+  rpc ExecuteWorkflow(WorkflowRequest) returns (WorkflowResponse);
+}
+
+// Messaging Messages
+message PublishRequest { string topic = 1; bytes data = 2; }
+message PublishResponse { string message_id = 1; }
+
+// Task Messages
+message TaskRequest { string queue = 1; string payload = 2; }
+message TaskResponse { string task_id = 1; }
+
+// Scheduler Messages
+message JobRequest { string name = 1; string schedule = 2; string target = 3; }
+message JobResponse { string job_id = 1; }
+
+// Workflow Messages
+message WorkflowRequest { string workflow_id = 1; string input_json = 2; }
+message WorkflowResponse { string output_json = 1; string state = 2; }
